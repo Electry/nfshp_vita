@@ -1,0 +1,14 @@
+.vscode/*
+build/*
+prx/*
+libc_bridge/out/*
+
+*.velf
+*.elf
+*.vpk
+*.sfo
+*.bin
+*.out
+*.o
+*.S
+*.wo
