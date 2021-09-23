@@ -12,3 +12,5 @@ libc_bridge/out/*
 *.o
 *.S
 *.wo
+
+!.gitkeep
