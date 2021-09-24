@@ -44,12 +44,11 @@ SceUInt input_thid = 0;
 EGLDisplay egl_display;
 EGLSurface egl_surface;
 
-bool keep_awake = true;
+bool keep_awake = false;
 
 so_module nfshp_mod;
 
 void (* JNI_OnLoad)(void *vm, void *reserved);
-void (* Java_com_ea_nfshp_nfshp_runEntryPoint)(void *env, void *obj);
 void (* Java_com_ea_EAThread_EAThread_Init)(void *env, void *obj);
 void (* Java_com_ea_EAIO_EAIO_StartupNativeImpl)(void *env, void *obj, int assets, const char *data_dir_path, const char *files_dir_path, const char *external_storage_path);
 void (* Java_com_ea_EAMIO_StorageDirectory_StartupNativeImpl)(void *env, void *obj);
@@ -280,7 +279,6 @@ int main_thread(SceSize argc, void *argp) {
   void *jni_env = jni_create_env();
 
   JNI_OnLoad(jni_vm, NULL);
-  Java_com_ea_nfshp_nfshp_runEntryPoint(jni_env, NULL);
   Java_com_ea_EAThread_EAThread_Init(jni_env, NULL);
   Java_com_ea_EAIO_EAIO_StartupNativeImpl(jni_env, NULL, 0x69696969, VAR_PATH, VAR_PATH, VAR_PATH);
   Java_com_ea_EAMIO_StorageDirectory_StartupNativeImpl(jni_env, NULL);
@@ -464,6 +462,10 @@ void nfshp_send_input_event(nfshp_input_event_t event, uint32_t arg) {
   sub_2474F4(a1, event_args);
 }
 
+void sub_9A270_hook(int a1, int ms) {
+  sceKernelDelayThreadCB(ms * 1000);
+}
+
 void sub_55A910_hook(float sec) {
   sceKernelDelayThreadCB((SceUInt)(sec * 1000 * 1000));
 }
@@ -502,7 +504,6 @@ int main(int argc, char *argv[]) {
     return 0;
 
   JNI_OnLoad = (void *)so_symbol(&nfshp_mod, "JNI_OnLoad");
-  Java_com_ea_nfshp_nfshp_runEntryPoint = (void *)so_symbol(&nfshp_mod, "Java_com_ea_nfshp_nfshp_runEntryPoint");
   Java_com_ea_EAThread_EAThread_Init = (void *)so_symbol(&nfshp_mod, "Java_com_ea_EAThread_EAThread_Init");
   Java_com_ea_EAIO_EAIO_StartupNativeImpl = (void *)so_symbol(&nfshp_mod, "Java_com_ea_EAIO_EAIO_StartupNativeImpl");
   Java_com_ea_EAMIO_StorageDirectory_StartupNativeImpl = (void *)so_symbol(&nfshp_mod, "Java_com_ea_EAMIO_StorageDirectory_StartupNativeImpl");
@@ -516,11 +517,15 @@ int main(int argc, char *argv[]) {
   Java_com_mpp_android_fmod_FModPlayer_audioCallback = (void *)so_symbol(&nfshp_mod, "Java_com_mpp_android_fmod_FModPlayer_audioCallback");
 
   // apply patches
+  hook_arm(nfshp_mod.text_base + 0x9A270, (uintptr_t)&sub_9A270_hook);
   hook_arm(nfshp_mod.text_base + 0x55A910, (uintptr_t)&sub_55A910_hook);
 
   // accept terms of service by default since the button is broken
   uint8_t patch[] = {0x29, 0x62, 0xC4, 0xE5}; // STRB R6, [R4,#0x229], R6 = 0x22
   kuKernelCpuUnrestrictedMemcpy((void *)(nfshp_mod.text_base + 0x21F37C), &patch, sizeof(patch));
+
+  uint8_t patch2[] = {0x02, 0x00, 0x52, 0xE1}; // CMP R2, R2
+  kuKernelCpuUnrestrictedMemcpy((void *)(nfshp_mod.text_base + 0x56DBF4), &patch2, sizeof(patch2));
 
   if (!ENABLE_ACCELEROMETER) {
     // disable accelerometer for steering

@@ -37,7 +37,7 @@ int pthread_thread_entry_fake(SceSize args, uintptr_t *argp) {
 
   entry(entry_arg);
 
-  return sceKernelExitThread(0);
+  return sceKernelExitDeleteThread(0);
 }
 
 int pthread_create_fake(SceUID *thread, void *attr, void *(*entry)(void *arg), void *arg) {
@@ -48,11 +48,7 @@ int pthread_create_fake(SceUID *thread, void *attr, void *(*entry)(void *arg), v
   int priority = SCE_KERNEL_PROCESS_PRIORITY_USER_DEFAULT; // 64 - 191
   int affinity = SCE_KERNEL_CPU_MASK_USER_ALL;
 
-  if (name[0] == '\0') {
-    sce_name = "pthread_thread";
-    priority = 96;
-    affinity = SCE_KERNEL_CPU_MASK_USER_1;
-  } else if (!strcmp(name, "FMOD thread for FMOD_NONBLOCKING")) {
+  if (!strcmp(name, "FMOD thread for FMOD_NONBLOCKING")) {
     sce_name = "fmod_thread";
     priority = 96;
     affinity = SCE_KERNEL_CPU_MASK_USER_2;
@@ -68,6 +64,10 @@ int pthread_create_fake(SceUID *thread, void *attr, void *(*entry)(void *arg), v
     sce_name = "fmod_stream_thread";
     priority = 80;
     affinity = SCE_KERNEL_CPU_MASK_USER_2;
+  } else {
+    sce_name = "pthread_thread";
+    priority = 72;
+    affinity = SCE_KERNEL_CPU_MASK_USER_1;
   }
 
   SceUID thid = sceKernelCreateThread(
@@ -93,8 +93,7 @@ int pthread_create_fake(SceUID *thread, void *attr, void *(*entry)(void *arg), v
 }
 
 int pthread_detach_fake(SceUID thread) {
-  sceKernelWaitThreadEnd(thread, NULL, NULL);
-  return sceKernelDeleteThread(thread);
+  return 0;
 }
 
 int pthread_join_fake(SceUID thread, void **retval) {

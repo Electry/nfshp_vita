@@ -22,8 +22,8 @@
 #include "so_util.h"
 
 #define MAX_PATH_LENGTH 256
-#define RAMCACHEBLOCKSIZE (256 * 1024)
-#define RAMCACHEBLOCKNUM 256
+#define RAMCACHEBLOCKSIZE (64 * 1024)
+#define RAMCACHEBLOCKNUM 1024
 
 static int64_t g_OpStorage[SCE_FIOS_OP_STORAGE_SIZE(64, MAX_PATH_LENGTH) / sizeof(int64_t) + 1];
 static int64_t g_ChunkStorage[SCE_FIOS_CHUNK_STORAGE_SIZE(1024) / sizeof(int64_t) + 1];

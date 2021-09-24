@@ -676,7 +676,7 @@ so_default_dynlib default_dynlib[] = {
   { "glPointParameterfv", (uintptr_t)&glPointParameterfv },
   { "glPointParameterx", (uintptr_t)&glPointParameterx },
   { "glPointParameterxv", (uintptr_t)&glPointParameterxv },
-  { "glPointSize", (uintptr_t)&glPointSize },
+  { "glPointSize", (uintptr_t)&glPointSize_wrapper },
   { "glPointSizePointerOES", (uintptr_t)&glPointSizePointerOES },
   { "glPointSizex", (uintptr_t)&glPointSizex },
   { "glPolygonOffset", (uintptr_t)&glPolygonOffset_wrapper },

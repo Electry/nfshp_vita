@@ -231,6 +231,22 @@ void *CallObjectMethodV(void *env, void *obj, int methodID, uintptr_t *args) {
   }
 }
 
+void CallVoidMethodV(void *env, void *obj, int methodID, uintptr_t *args) {
+  switch (methodID) {
+    case APPLY_KEEP_AWAKE:
+      keep_awake = (bool)args[0];
+      break;
+    case SET_STD_ORIENTATION:
+      break;
+    case INIT_AUDIO_TRACK:
+      nfshp_init_audio_track(args[0], args[1], args[2], args[3]);
+      break;
+    case STOP_AUDIO_TRACK:
+      nfshp_stop_audio_track();
+      break;
+  }
+}
+
 int CallStaticIntMethodV(void *env, void *obj, int methodID, uintptr_t *args) {
   switch (methodID) {
     case GET_MIN_BUFFER_SIZE:
@@ -263,22 +279,6 @@ int CallStaticBooleanMethodV(void *env, void *obj, int methodID, uintptr_t *args
 
 void CallStaticVoidMethodV(void *env, void *obj, int methodID, uintptr_t *args) {
   // ok
-}
-
-void CallVoidMethodV(void *env, void *obj, int methodID, uintptr_t *args) {
-  switch (methodID) {
-    case APPLY_KEEP_AWAKE:
-      keep_awake = (bool)args[0];
-      break;
-    case SET_STD_ORIENTATION:
-      break;
-    case INIT_AUDIO_TRACK:
-      nfshp_init_audio_track(args[0], args[1], args[2], args[3]);
-      break;
-    case STOP_AUDIO_TRACK:
-      nfshp_stop_audio_track();
-      break;
-  }
 }
 
 int GetMethodID(void *env, void *class, const char *name, const char *sig) {

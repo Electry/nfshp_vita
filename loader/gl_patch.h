@@ -18,6 +18,7 @@ void glMultiTexCoord4f_wrapper(GLenum target, GLfloat s, GLfloat t, GLfloat r, G
 void glNormal3f_wrapper(GLfloat nx, GLfloat ny, GLfloat nz);
 void glOrthof_wrapper(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
 void glPointParameterf_wrapper(GLenum pname, GLfloat param);
+void glPointSize_wrapper(GLfloat size);
 void glPolygonOffset_wrapper(GLfloat factor, GLfloat units);
 void glRotatef_wrapper(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
 void glSampleCoverage_wrapper(GLclampf value, GLboolean invert);

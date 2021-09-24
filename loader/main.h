@@ -7,9 +7,9 @@
 // #define DEBUG
 #define LOAD_ADDRESS 0x98000000
 
-#define DEFAULT_STACK_SIZE 2*1024*1024
+#define DEFAULT_STACK_SIZE 512*1024
 #define MEMORY_NEWLIB_MB 220
-#define MEMORY_SCELIBC_MB 40
+#define MEMORY_SCELIBC_MB 8
 
 #define DATA_PATH "ux0:data/nfshp"
 #define VAR_PATH DATA_PATH "/data"
