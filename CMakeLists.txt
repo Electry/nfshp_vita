@@ -36,21 +36,33 @@ add_executable(${PROJECT_NAME}
   loader/pthread.c
   loader/gl_patch.c
   loader/fios.c
+  loader/dialog.c
+  loader/movie.c
 )
 
 target_link_libraries(${PROJECT_NAME}
   stdc++
   m
   kubridge_stub
+  SceAppMgr_stub
   SceAppUtil_stub
   SceAudio_stub
   SceCtrl_stub
   SceMotion_stub
   SceFios2_stub
   SceLibcBridge_stub
+  SceSysmodule_stub
   ScePower_stub
   SceTouch_stub
   SceVshBridge_stub
+  SceKernelDmacMgr_stub
+
+  SceCommonDialog_stub
+  SceGxm_stub
+  SceDisplay_stub
+  SceAvPlayer_stub
+  vita2d
+
   libGLESv1_CM_stub_weak
   libIMGEGL_stub_weak
   libgpu_es4_ext_stub_weak

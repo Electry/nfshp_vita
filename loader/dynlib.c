@@ -173,6 +173,16 @@ int nanosleep_fake(const struct timespec *req, struct timespec *rem) {
   return usleep(req->tv_sec * 1000 * 1000 + req->tv_nsec / 1000);
 }
 
+void *memset_hook(void *s, int c, size_t n) {
+  if (c == 0 && n > 64 * 1024) {
+    sceDmacMemset(s, c, n);
+  } else {
+    sceClibMemset(s, c, n);
+  }
+
+  return s;
+}
+
 static FILE __sF_fake[0x100][3];
 
 static const short _C_tolower_[] = {
@@ -504,7 +514,7 @@ so_default_dynlib default_dynlib[] = {
   { "memcmp", (uintptr_t)&memcmp },
   { "memcpy", (uintptr_t)&memcpy },
   { "memmove", (uintptr_t)&memmove },
-  { "memset", (uintptr_t)&memset },
+  { "memset", (uintptr_t)&memset_hook },
 
   // { "puts", (uintptr_t)&puts },
   // { "putchar", (uintptr_t)&putchar },
@@ -555,7 +565,7 @@ so_default_dynlib default_dynlib[] = {
   { "glClearDepthx", (uintptr_t)&glClearDepthx },
   { "glClearStencil", (uintptr_t)&glClearStencil },
   { "glClientActiveTexture", (uintptr_t)&glClientActiveTexture },
-  { "glClipPlanef", (uintptr_t)&glClipPlanef_wrapper },
+  { "glClipPlanef", (uintptr_t)&glClipPlanef },
   { "glClipPlanex", (uintptr_t)&glClipPlanex },
   { "glColor4f", (uintptr_t)&glColor4f_wrapper },
   { "glColor4ub", (uintptr_t)&glColor4ub },

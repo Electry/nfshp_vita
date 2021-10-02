@@ -4,7 +4,6 @@
 void glAlphaFunc_wrapper(GLenum func, GLclampf ref);
 void glClearColor_wrapper(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
 void glClearDepthf_wrapper(GLclampf depth);
-void glClipPlanef_wrapper(GLenum plane, const GLfloat *equation);
 void glColor4f_wrapper(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 void glDepthRangef_wrapper(GLclampf zNear, GLclampf zFar);
 void glDrawTexfOES_wrapper(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height);

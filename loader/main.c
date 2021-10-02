@@ -31,6 +31,8 @@
 #include "dynlib.h"
 #include "jni.h"
 #include "fios.h"
+#include "dialog.h"
+#include "movie.h"
 
 int _newlib_heap_size_user = MEMORY_NEWLIB_MB * 1024 * 1024;
 unsigned int sceLibcHeapSize = MEMORY_SCELIBC_MB * 1024 * 1024;
@@ -284,12 +286,15 @@ int main_thread(SceSize argc, void *argp) {
   Java_com_ea_EAMIO_StorageDirectory_StartupNativeImpl(jni_env, NULL);
   Java_com_ea_blast_MainActivity_NativeOnCreate(jni_env, NULL);
 
+  // wait for opening movie finish
+  sceKernelWaitSema(movie_sema, 1, NULL);
+
   gl_init();
 
   Java_com_ea_blast_AndroidRenderer_NativeOnSurfaceCreated(jni_env, NULL);
   Java_com_ea_blast_AndroidRenderer_NativeOnSurfaceChanged(jni_env, NULL, SCREEN_W, SCREEN_H);
 
-  // Spawn input thread
+  // spawn input thread
   input_thid = sceKernelCreateThread("input_thread", (SceKernelThreadEntry)input_thread,
     96, DEFAULT_STACK_SIZE, 0, SCE_KERNEL_CPU_MASK_USER_2, NULL);
   input_thread_run = true;
@@ -477,31 +482,52 @@ int main(int argc, char *argv[]) {
   memset(&boot_param, 0, sizeof(SceAppUtilBootParam));
   sceAppUtilInit(&init_param, &boot_param);
 
-  loadlib("app0:libgpu_es4_ext.suprx");
-  loadlib("app0:libIMGEGL.suprx");
-
-  PVRSRV_PSP2_APPHINT hint;
-  PVRSRVInitializeAppHint(&hint);
-  PVRSRVCreateVirtualAppHint(&hint);
-
   scePowerSetArmClockFrequency(444);
   scePowerSetBusClockFrequency(222);
   scePowerSetGpuClockFrequency(222);
   scePowerSetGpuXbarClockFrequency(166);
 
+  if (loadlib("app0:libgpu_es4_ext.suprx") < 0)
+    fatal_error("Error: Failed to load libgpu_es4_ext.suprx");
+
+  if (loadlib("app0:libIMGEGL.suprx") < 0)
+    fatal_error("Error: Failed to load libIMGEGL.suprx");
+
+  PVRSRV_PSP2_APPHINT hint;
+  PVRSRVInitializeAppHint(&hint);
+  hint.bDisableHWTQTextureUpload = true;
+  hint.ui32UNCTexHeapSize = 16 * 1024 * 1024; // pre-allocate
+  PVRSRVCreateVirtualAppHint(&hint);
+
+  if (sceSysmoduleLoadModule(SCE_SYSMODULE_AVPLAYER) < 0)
+    fatal_error("Error: Failed to load SceAvPlayer");
+
   if (check_kubridge() < 0)
-    return 0;
+    fatal_error("Error: kubridge.skprx is not installed");
 
   if (so_load(&nfshp_mod, SO_PATH, LOAD_ADDRESS) < 0)
-    return 0;
+    fatal_error("Error: Could not load %s", SO_PATH);
+
+  if (!file_exists(OBB_PATH))
+    fatal_error("Error: Could not find %s", OBB_PATH);
+
+  if (fios_init() < 0)
+    fatal_error("Error: Failed to initialize FIOS2");
+
+  // start opening movie
+  movie_sema = sceKernelCreateSema("movie_sema", 0, 0, 0x7fffffff, NULL);
+  if (file_exists(MOVIE_PATH)) {
+    SceUID movie_thid = sceKernelCreateThread("movie_thread", (SceKernelThreadEntry)movie_thread,
+      96, 0x4000, 0, SCE_KERNEL_CPU_MASK_USER_2, NULL);
+    sceKernelStartThread(movie_thid, 0, NULL);
+  } else {
+    sceKernelSignalSema(movie_sema, 1);
+  }
 
   so_relocate(&nfshp_mod);
   so_resolve(&nfshp_mod, default_dynlib, numfunc_default_dynlib, 0);
   so_flush_caches(&nfshp_mod);
   so_initialize(&nfshp_mod);
-
-  if (fios_init() < 0)
-    return 0;
 
   JNI_OnLoad = (void *)so_symbol(&nfshp_mod, "JNI_OnLoad");
   Java_com_ea_EAThread_EAThread_Init = (void *)so_symbol(&nfshp_mod, "Java_com_ea_EAThread_EAThread_Init");
@@ -516,14 +542,18 @@ int main(int argc, char *argv[]) {
   Java_com_ea_blast_AccelerometerAndroidDelegate_NativeOnAcceleration = (void *)so_symbol(&nfshp_mod, "Java_com_ea_blast_AccelerometerAndroidDelegate_NativeOnAcceleration");
   Java_com_mpp_android_fmod_FModPlayer_audioCallback = (void *)so_symbol(&nfshp_mod, "Java_com_mpp_android_fmod_FModPlayer_audioCallback");
 
-  // apply patches
+  // patch thread delay
   hook_arm(nfshp_mod.text_base + 0x9A270, (uintptr_t)&sub_9A270_hook);
   hook_arm(nfshp_mod.text_base + 0x55A910, (uintptr_t)&sub_55A910_hook);
+
+  // kill gles1 EXT_texture_lod_bias
+  hook_arm(nfshp_mod.text_base + 0x56075C, (uintptr_t)&ret0);
 
   // accept terms of service by default since the button is broken
   uint8_t patch[] = {0x29, 0x62, 0xC4, 0xE5}; // STRB R6, [R4,#0x229], R6 = 0x22
   kuKernelCpuUnrestrictedMemcpy((void *)(nfshp_mod.text_base + 0x21F37C), &patch, sizeof(patch));
 
+  // kill nfs_textures export
   uint8_t patch2[] = {0x02, 0x00, 0x52, 0xE1}; // CMP R2, R2
   kuKernelCpuUnrestrictedMemcpy((void *)(nfshp_mod.text_base + 0x56DBF4), &patch2, sizeof(patch2));
 

@@ -12,9 +12,10 @@
 #define MEMORY_SCELIBC_MB 8
 
 #define DATA_PATH "ux0:data/nfshp"
-#define VAR_PATH DATA_PATH "/data"
-#define OBB_PATH DATA_PATH "/main.2022.com.eamobile.nfshp_row_wf.obb"
-#define SO_PATH  DATA_PATH "/libnfshp.so"
+#define VAR_PATH   DATA_PATH "/data"
+#define OBB_PATH   DATA_PATH "/main.2022.com.eamobile.nfshp_row_wf.obb"
+#define SO_PATH    DATA_PATH "/libnfshp.so"
+#define MOVIE_PATH DATA_PATH "/opening.mp4"
 
 #define SCREEN_W 960
 #define SCREEN_H 544

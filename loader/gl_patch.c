@@ -42,13 +42,6 @@ __attribute__((naked)) void glClearDepthf_wrapper(GLclampf depth) {
   );
 }
 
-__attribute__((naked)) void glClipPlanef_wrapper(GLenum plane, const GLfloat *equation) {
-  asm volatile (
-    "vmov s0, r1\n"
-    "b glClipPlanef\n"
-  );
-}
-
 __attribute__((naked)) void glColor4f_wrapper(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
   asm volatile (
     "vmov s0, r0\n"
