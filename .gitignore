@@ -7,7 +7,6 @@ libc_bridge/out/*
 *.elf
 *.vpk
 *.sfo
-*.bin
 *.out
 *.o
 *.S

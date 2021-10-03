@@ -219,7 +219,7 @@ void *CallObjectMethodV(void *env, void *obj, int methodID, uintptr_t *args) {
     case GET_LOCALE:
       return "en_US";
     case GET_LANGUAGE:
-      return "en";
+      return "en"; // en fr de it ja es ko zh
     case GET_APPLICATION_ID:
       return "com.eamobile.nfshp_row_wf";
     case GET_APPLICATION_VERSION:

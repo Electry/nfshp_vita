@@ -47,6 +47,7 @@ EGLDisplay egl_display;
 EGLSurface egl_surface;
 
 bool keep_awake = false;
+bool draw_custom_splash = true;
 
 so_module nfshp_mod;
 
@@ -300,12 +301,37 @@ int main_thread(SceSize argc, void *argp) {
   input_thread_run = true;
   sceKernelStartThread(input_thid, 0, NULL);
 
+  // prepare custom splash
+  const int SPLASH_CROP[] = {0, 0, SPLASH_W, SPLASH_H};
+
+  void *splash_data = malloc(SPLASH_W * SPLASH_H * 3);
+  FILE *splash_fp = fopen("app0:loading.bin", "rb");
+  fread(splash_data, 1, SPLASH_W * SPLASH_H * 3, splash_fp);
+
+  GLuint splash_tex;
+  glGenTextures(1, &splash_tex);
+  glBindTexture(GL_TEXTURE_2D, splash_tex);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SPLASH_W, SPLASH_H, 0, GL_RGB, GL_UNSIGNED_BYTE, splash_data);
+  free(splash_data);
+
   while (true) {
     if (keep_awake) {
       sceKernelPowerTick(0);
     }
 
     Java_com_ea_blast_AndroidRenderer_NativeOnDrawFrame(jni_env, NULL);
+
+    if (draw_custom_splash) {
+      glClearColorx(1, 1, 1, 1);
+      glClear(GL_COLOR_BUFFER_BIT);
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, splash_tex);
+      glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_CROP_RECT_OES, SPLASH_CROP);
+      glDrawTexiOES((SCREEN_W / 2) - (SPLASH_W / 2), (SCREEN_H / 2) - (SPLASH_H / 2), 0, SPLASH_W, SPLASH_H);
+    }
+
     eglSwapBuffers(egl_display, egl_surface);
   }
 
@@ -475,6 +501,10 @@ void sub_55A910_hook(float sec) {
   sceKernelDelayThreadCB((SceUInt)(sec * 1000 * 1000));
 }
 
+void sub_65CF7C_hook() {
+  draw_custom_splash = false;
+}
+
 int main(int argc, char *argv[]) {
   SceAppUtilInitParam init_param;
   SceAppUtilBootParam boot_param;
@@ -495,7 +525,7 @@ int main(int argc, char *argv[]) {
 
   PVRSRV_PSP2_APPHINT hint;
   PVRSRVInitializeAppHint(&hint);
-  hint.bDisableHWTQTextureUpload = true;
+  // hint.bDisableHWTQTextureUpload = true;
   hint.ui32UNCTexHeapSize = 16 * 1024 * 1024; // pre-allocate
   PVRSRVCreateVirtualAppHint(&hint);
 
@@ -548,6 +578,9 @@ int main(int argc, char *argv[]) {
 
   // kill gles1 EXT_texture_lod_bias
   hook_arm(nfshp_mod.text_base + 0x56075C, (uintptr_t)&ret0);
+
+  // stop drawing custom splash when PSA is drawn
+  hook_arm(nfshp_mod.text_base + 0x65CF7C, (uintptr_t)&sub_65CF7C_hook);
 
   // accept terms of service by default since the button is broken
   uint8_t patch[] = {0x29, 0x62, 0xC4, 0xE5}; // STRB R6, [R4,#0x229], R6 = 0x22

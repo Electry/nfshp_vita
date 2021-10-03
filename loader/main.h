@@ -22,6 +22,9 @@
 
 #define ENABLE_ACCELEROMETER false
 
+#define SPLASH_W 512
+#define SPLASH_H 128
+
 typedef enum {
   INPUT_EVENT_INVALID = 0,
 

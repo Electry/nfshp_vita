@@ -82,4 +82,6 @@ vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} eboot.bin
   FILE ${CMAKE_SOURCE_DIR}/prx/libIMGEGL.suprx libIMGEGL.suprx
   FILE ${CMAKE_SOURCE_DIR}/prx/libGLESv1_CM.suprx module/libGLESv1_CM.suprx
   FILE ${CMAKE_SOURCE_DIR}/prx/libpvrPSP2_WSEGL.suprx module/libpvrPSP2_WSEGL.suprx
+
+  FILE ${CMAKE_SOURCE_DIR}/data/loading.bin loading.bin
 )
